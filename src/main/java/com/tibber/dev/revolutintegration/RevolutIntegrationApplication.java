@@ -12,15 +12,15 @@ import org.springframework.web.client.RestTemplate;
 @SpringBootApplication
 public class RevolutIntegrationApplication {
 
-	@Bean
-	RestTemplate restTemplate() {
-		return new RestTemplate();
-	}
+    @Bean
+    RestTemplate restTemplate() {
+        return new RestTemplate();
+    }
 
-	public static void main(String[] args) {
-		ConfigurableApplicationContext applicationContext =
-				SpringApplication.run(RevolutIntegrationApplication.class, args);
-		System.exit(SpringApplication.exit(applicationContext));
-	}
+    public static void main(String[] args) {
+        ConfigurableApplicationContext applicationContext =
+                SpringApplication.run(RevolutIntegrationApplication.class, args);
+        System.exit(SpringApplication.exit(applicationContext));
+    }
 
 }

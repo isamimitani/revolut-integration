@@ -24,21 +24,14 @@ public class JobCompletionNotificationListener extends JobExecutionListenerSuppo
 
     @Override
     public void afterJob(JobExecution jobExecution) {
-        if(jobExecution.getStatus() == BatchStatus.COMPLETED) {
+        if (jobExecution.getStatus() == BatchStatus.COMPLETED) {
             log.info("!!! JOB FINISHED! Time to verify the results");
 
-            jdbcTemplate.query("SELECT first_name, last_name FROM people",
+            jdbcTemplate.query("SELECT id, type FROM transaction_data",
                     (rs, row) -> new TransactionData(
                             rs.getString(1),
                             rs.getString(2))
-            ).forEach(person -> log.info("Found <" + person + "> in the database."));
-
-//            // Create return codes mapper
-//            SimpleJvmExitCodeMapper mapper = new SimpleJvmExitCodeMapper();
-//            // Map codes and exit
-//            String status = jobExecution.getExitStatus().getExitCode();
-//            Integer returnCode = mapper.intValue(status);
-//            System.exit(returnCode);
+            ).forEach(data -> log.info("Found <" + data + "> in the database."));
         }
     }
 }

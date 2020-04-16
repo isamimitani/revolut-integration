@@ -7,7 +7,8 @@ public class TestData {
     private String title;
     private String completed;
 
-    public TestData(){}
+    public TestData() {
+    }
 
     public TestData(String userId, String id) {
         this.userId = userId;

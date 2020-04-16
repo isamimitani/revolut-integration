@@ -1,22 +1,50 @@
 package com.tibber.dev.revolutintegration.entity;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
+import com.fasterxml.jackson.annotation.JsonSetter;
+
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class TransactionData {
 
     private String id;
     private String type;
-    private String requestedId;
+    private String requestId;
     private String state;
+    private String reasonCode;
     private String createdAt;
     private String updatedAt;
     private String completedAt;
+    private String scheduledFor;
+    private String relatedTransactionId;
     private String reference;
-    private String[] legs;
+    private List<Legs> legs;
+    private Map<String, Object> card = new LinkedHashMap<>();
+    private Map<String, Object> merchant = new LinkedHashMap<>();
 
-    public TransactionData(){}
+    public TransactionData() {
+    }
 
     public TransactionData(String id, String type) {
         this.id = id;
         this.type = type;
+    }
+
+    public TransactionData(String id, String type, String requestId, String state,
+                           String createdAt, String updatedAt, String completedAt,
+                           String reference, Map legs) {
+        this.id = id;
+        this.type = type;
+        this.requestId = requestId;
+        this.state = state;
+        this.createdAt = createdAt;
+        this.updatedAt = updatedAt;
+        this.completedAt = completedAt;
+        this.reference = reference;
+//        this.legs = legs;
     }
 
     public String getId() {
@@ -35,12 +63,13 @@ public class TransactionData {
         this.type = type;
     }
 
-    public String getRequestedId() {
-        return requestedId;
+    public String getRequestId() {
+        return requestId;
     }
 
-    public void setRequestedId(String requestedId) {
-        this.requestedId = requestedId;
+    @JsonSetter("request_id")
+    public void setRequestId(String requestId) {
+        this.requestId = requestId;
     }
 
     public String getState() {
@@ -51,10 +80,20 @@ public class TransactionData {
         this.state = state;
     }
 
+    public String getReasonCode() {
+        return reasonCode;
+    }
+
+    @JsonSetter("reason_code")
+    public void setReasonCode(String reasonCode) {
+        this.reasonCode = reasonCode;
+    }
+
     public String getCreatedAt() {
         return createdAt;
     }
 
+    @JsonSetter("created_at")
     public void setCreatedAt(String createdAt) {
         this.createdAt = createdAt;
     }
@@ -63,6 +102,7 @@ public class TransactionData {
         return updatedAt;
     }
 
+    @JsonSetter("updated_at")
     public void setUpdatedAt(String updatedAt) {
         this.updatedAt = updatedAt;
     }
@@ -71,8 +111,27 @@ public class TransactionData {
         return completedAt;
     }
 
+    @JsonSetter("completed_at")
     public void setCompletedAt(String completedAt) {
         this.completedAt = completedAt;
+    }
+
+    public String getScheduledFor() {
+        return scheduledFor;
+    }
+
+    @JsonSetter("scheduled_for")
+    public void setScheduledFor(String scheduledFor) {
+        this.scheduledFor = scheduledFor;
+    }
+
+    public String getRelatedTransactionId() {
+        return relatedTransactionId;
+    }
+
+    @JsonSetter("related_transaction_id")
+    public void setRelatedTransactionId(String relatedTransactionId) {
+        this.relatedTransactionId = relatedTransactionId;
     }
 
     public String getReference() {
@@ -83,12 +142,28 @@ public class TransactionData {
         this.reference = reference;
     }
 
-    public String[] getLegs() {
+    public List<Legs> getLegs() {
         return legs;
     }
 
-    public void setLegs(String[] legs) {
+    public void setLegs(List<Legs> legs) {
         this.legs = legs;
+    }
+
+    public Map<String, Object> getCard() {
+        return card;
+    }
+
+    public void setCard(Map<String, Object> card) {
+        this.card = card;
+    }
+
+    public Map<String, Object> getMerchant() {
+        return merchant;
+    }
+
+    public void setMerchant(Map<String, Object> merchant) {
+        this.merchant = merchant;
     }
 
     @Override
@@ -96,6 +171,17 @@ public class TransactionData {
         return "TransactionData{" +
                 "id='" + id + '\'' +
                 ", type='" + type + '\'' +
+                ", request_id='" + requestId + '\'' +
+                ", state='" + state + '\'' +
+                ", reason_code='" + reasonCode + '\'' +
+                ", created_at='" + createdAt + '\'' +
+                ", updated_at='" + updatedAt + '\'' +
+                ", completed_at='" + completedAt + '\'' +
+                ", scheduled_for='" + scheduledFor + '\'' +
+                ", related_transaction_id='" + relatedTransactionId + '\'' +
+                ", reference='" + reference + '\'' +
+                ", card=" + card +
+                ", merchant=" + merchant +
                 '}';
     }
 }
