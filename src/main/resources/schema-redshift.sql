@@ -1,4 +1,4 @@
-CREATE TABLE IF NOT EXISTS transaction_data
+CREATE TABLE IF NOT EXISTS trading_parameters.transaction_data
 (
     id                            VARCHAR(50) NOT NULL PRIMARY KEY,
     type                          VARCHAR(20),
@@ -33,7 +33,7 @@ CREATE TABLE IF NOT EXISTS transaction_data
     merchant_country              VARCHAR(50)
 );
 
-CREATE TABLE IF NOT EXISTS revolut_auth_info
+CREATE TABLE IF NOT EXISTS trading_parameters.revolut_auth_info
 (
     refresh_token VARCHAR(100) NOT NULL PRIMARY KEY,
     client_id     VARCHAR(50),

@@ -1,4 +1,4 @@
-package com.tibber.dev.revolutintegration.entity;
+package com.tibber.dev.revolutintegration.model;
 
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonSetter;
@@ -31,20 +31,6 @@ public class TransactionData {
     public TransactionData(String id, String type) {
         this.id = id;
         this.type = type;
-    }
-
-    public TransactionData(String id, String type, String requestId, String state,
-                           String createdAt, String updatedAt, String completedAt,
-                           String reference, Map legs) {
-        this.id = id;
-        this.type = type;
-        this.requestId = requestId;
-        this.state = state;
-        this.createdAt = createdAt;
-        this.updatedAt = updatedAt;
-        this.completedAt = completedAt;
-        this.reference = reference;
-//        this.legs = legs;
     }
 
     public String getId() {

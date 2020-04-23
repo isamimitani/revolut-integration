@@ -1,4 +1,4 @@
-package com.tibber.dev.revolutintegration.entity;
+package com.tibber.dev.revolutintegration.model;
 
 public class FlattenTransactionData {
 
