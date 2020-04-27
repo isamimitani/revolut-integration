@@ -1,11 +1,17 @@
 package com.tibber.dev.revolutintegration.reader;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.DeserializationFeature;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.tibber.dev.revolutintegration.model.RefreshTokenResponse;
 import com.tibber.dev.revolutintegration.model.RevolutAuthInfo;
 import com.tibber.dev.revolutintegration.model.TransactionData;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.batch.item.ItemReader;
+import org.springframework.core.env.Environment;
+import org.springframework.jdbc.core.JdbcTemplate;
+import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
 
 import java.io.*;
 import java.nio.charset.Charset;
@@ -20,22 +26,38 @@ import java.util.stream.Stream;
 
 public class RevolutTransactionDataReader implements ItemReader<TransactionData> {
 
+    private static final Logger log = LoggerFactory.getLogger(RevolutTransactionDataReader.class);
+
+    private final Environment environment;
+    private final JdbcTemplate jdbcTemplate;
     private final String transactionApiUrl;
     private final String refreshTokenApiUrl;
-    private final String authFilePath;
+    private LocalDate from;
+    private LocalDate to;
     private ObjectMapper objectMapper;
     private int nextDataIndex;
     private List<TransactionData> transactionData;
     private RefreshTokenResponse tokenResponse;
 
-    public RevolutTransactionDataReader(String transactionApiUrl, String refreshTokenApiUrl, String authFilePath) {
-        this.transactionApiUrl = transactionApiUrl;
-        this.refreshTokenApiUrl = refreshTokenApiUrl;
-        this.authFilePath = authFilePath;
+    public RevolutTransactionDataReader(Environment environment, JdbcTemplate jdbcTemplate, String fromDate, String toDate) {
+        this.environment = environment;
+        this.jdbcTemplate = jdbcTemplate;
+        this.transactionApiUrl = environment.getRequiredProperty("revolut.api.url.transaction");
+        this.refreshTokenApiUrl = environment.getRequiredProperty("revolut.api.url.refreshtoken");
         nextDataIndex = 0;
+
+        from = getDateMinusDays(Integer.parseInt(environment.getRequiredProperty("days.latest")));
+        to = getDateMinusDays(1);
+        if (fromDate != null) {
+            from = LocalDate.parse(fromDate);
+        }
+        if (toDate != null) {
+            to = LocalDate.parse(toDate);
+        }
+
         objectMapper = new ObjectMapper();
         // ignore unknown properties
-//        objectMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
+        objectMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
     }
 
     @Override
@@ -44,8 +66,14 @@ public class RevolutTransactionDataReader implements ItemReader<TransactionData>
             tokenResponse = fetchAccessTokenFromAPI();
         }
 
+        if (tokenResponse.getError() != null) {
+            log.error("Failed to get access token. Terminate batch job. error: " + tokenResponse.getError() + ", error_description: " + tokenResponse.getErrorDescription());
+            throw new RuntimeException("Failed to get access token. Terminate batch job. error: " + tokenResponse.getError() + ", error_description: " + tokenResponse.getErrorDescription());
+        }
+
         if (transactionDataIsNotInitialized()) {
             transactionData = fetchTransactionDataFromAPI();
+            removeTransactionDataFromDB();
         }
 
         TransactionData nextData = null;
@@ -67,14 +95,13 @@ public class RevolutTransactionDataReader implements ItemReader<TransactionData>
 
     private List<TransactionData> fetchTransactionDataFromAPI() {
         List<TransactionData> list = null;
-        // todo: build url dynamically with from and to
-        LocalDate from = LocalDate.parse("2017-06-01");
         String[] command = new String[]{
                 "curl",
-                transactionApiUrl + "?from=" + from.toString() + "&to=" + getLastDate().toString(),
+                transactionApiUrl + "?from=" + from.toString() + "&to=" + to.toString(),
                 "-H",
                 "Authorization: Bearer " + tokenResponse.getAccessToken()
         };
+        System.out.println(command[1]);
 
         String response = sendRequest(command);
         // todo: if result is "{"message":"The request should be authorized."}" handle error
@@ -90,7 +117,7 @@ public class RevolutTransactionDataReader implements ItemReader<TransactionData>
         RefreshTokenResponse result = null;
 
         RevolutAuthInfo authInfo = getAuthInfoFromFile();
-        System.out.println(authInfo);
+        log.info(authInfo.toString());
 
         String[] command = new String[]{
                 "curl",
@@ -110,6 +137,7 @@ public class RevolutTransactionDataReader implements ItemReader<TransactionData>
         } catch (IOException ex) {
             ex.printStackTrace();
         }
+        // todo: handle {"error":"invalid_request","error_description":"The Token has expired on Thu Apr 23 10:23:47 UTC 2020."}
         return result;
     }
 
@@ -151,14 +179,14 @@ public class RevolutTransactionDataReader implements ItemReader<TransactionData>
         return list;
     }
 
-    private LocalDate getLastDate() {
+    private LocalDate getDateMinusDays(int days) {
         LocalDate today = LocalDate.now();
-        return today.minus(Period.ofDays(1));
+        return today.minus(Period.ofDays(days));
     }
 
     private RevolutAuthInfo getAuthInfoFromFile() {
         StringBuilder contentBuilder = new StringBuilder();
-        try (Stream<String> stream = Files.lines(Paths.get(authFilePath), StandardCharsets.UTF_8)) {
+        try (Stream<String> stream = Files.lines(Paths.get(environment.getRequiredProperty("revolut.auth.file.path")), StandardCharsets.UTF_8)) {
             stream.forEach(s -> contentBuilder.append(s).append("\n"));
         } catch (IOException e) {
             e.printStackTrace();
@@ -170,5 +198,13 @@ public class RevolutTransactionDataReader implements ItemReader<TransactionData>
             e.printStackTrace();
         }
         return authInfo;
+    }
+
+    private void removeTransactionDataFromDB() {
+        LocalDate tomorrow = to.plus(Period.ofDays(1));
+        log.debug("delete transaction data from " + from.toString() + " to " + tomorrow.toString());
+        int deletedRows = jdbcTemplate.update(environment.getRequiredProperty("sql.delete.transactiondata"),
+                new Object[]{from.toString(), to.toString()});
+        log.debug("Deleted " + deletedRows + " rows.");
     }
 }

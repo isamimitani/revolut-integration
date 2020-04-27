@@ -7,6 +7,8 @@ public class RefreshTokenResponse {
     private String accessToken;
     private String tokenType;
     private int expiresIn;
+    private String error;
+    private String errorDescription;
 
     public String getAccessToken() {
         return accessToken;
@@ -35,12 +37,31 @@ public class RefreshTokenResponse {
         this.expiresIn = expiresIn;
     }
 
+    public String getError() {
+        return error;
+    }
+
+    public void setError(String error) {
+        this.error = error;
+    }
+
+    public String getErrorDescription() {
+        return errorDescription;
+    }
+
+    @JsonSetter("error_description")
+    public void setErrorDescription(String errorDescription) {
+        this.errorDescription = errorDescription;
+    }
+
     @Override
     public String toString() {
         return "RefreshTokenResponse{" +
                 "accessToken='" + accessToken + '\'' +
                 ", tokenType='" + tokenType + '\'' +
                 ", expiresIn=" + expiresIn +
+                ", error='" + error + '\'' +
+                ", errorDescription='" + errorDescription + '\'' +
                 '}';
     }
 }

@@ -21,19 +21,18 @@ public class JobCompletionNotificationListener extends JobExecutionListenerSuppo
     private static final Logger log = LoggerFactory.getLogger(JobCompletionNotificationListener.class);
 
     private final JdbcTemplate jdbcTemplate;
+    private final Environment environment;
 
     @Autowired
-    private Environment environment;
-
-    @Autowired
-    public JobCompletionNotificationListener(JdbcTemplate jdbcTemplate) {
+    public JobCompletionNotificationListener(JdbcTemplate jdbcTemplate, Environment environment) {
         this.jdbcTemplate = jdbcTemplate;
+        this.environment = environment;
     }
 
     @Override
     public void afterJob(JobExecution jobExecution) {
         if (jobExecution.getStatus() == BatchStatus.COMPLETED) {
-            log.info("!!! JOB FINISHED! Time to verify the results");
+            log.debug("!!! JOB FINISHED! Time to verify the results");
 
             try {
                 // delete temporary file
@@ -42,11 +41,13 @@ public class JobCompletionNotificationListener extends JobExecutionListenerSuppo
                 e.printStackTrace();
             }
 
-            jdbcTemplate.query("SELECT id, type FROM transaction_data",
+            jdbcTemplate.query(environment.getRequiredProperty("sql.select.transactiondata"),
                     (rs, row) -> new TransactionData(
                             rs.getString(1),
                             rs.getString(2))
-            ).forEach(data -> log.info("Found <" + data + "> in the database."));
+            ).forEach(data -> log.debug("Found <" + data + "> in the database."));
+        } else {
+            log.error("!!! BATCH JOB FAILED !!!");
         }
     }
 }

@@ -47,7 +47,7 @@ public class FlattenTransactionDataProcessor implements ItemProcessor<Transactio
         flattenTransactionData.setMerchantCategoryCode((String) transactionData.getMerchant().get("category_code"));
         flattenTransactionData.setMerchantCountry((String) transactionData.getMerchant().get("country"));
 
-        log.info("Converting (" + transactionData + ") into (" + flattenTransactionData + ")");
+        log.debug("Converting (" + transactionData + ") into (" + flattenTransactionData + ")");
 
         return flattenTransactionData;
     }

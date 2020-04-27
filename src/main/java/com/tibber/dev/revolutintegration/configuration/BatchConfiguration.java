@@ -14,6 +14,7 @@ import org.springframework.batch.core.Step;
 import org.springframework.batch.core.configuration.annotation.EnableBatchProcessing;
 import org.springframework.batch.core.configuration.annotation.JobBuilderFactory;
 import org.springframework.batch.core.configuration.annotation.StepBuilderFactory;
+import org.springframework.batch.core.configuration.annotation.StepScope;
 import org.springframework.batch.core.launch.support.RunIdIncrementer;
 import org.springframework.batch.item.ItemReader;
 import org.springframework.batch.item.ItemWriter;
@@ -23,12 +24,13 @@ import org.springframework.batch.item.database.JdbcCursorItemReader;
 import org.springframework.batch.item.database.builder.JdbcBatchItemWriterBuilder;
 import org.springframework.batch.item.file.FlatFileItemWriter;
 import org.springframework.batch.item.support.CompositeItemWriter;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Qualifier;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.env.Environment;
 import org.springframework.core.io.FileSystemResource;
+import org.springframework.jdbc.core.JdbcTemplate;
 
 import javax.sql.DataSource;
 import java.io.File;
@@ -42,41 +44,47 @@ import java.util.List;
 @EnableBatchProcessing
 public class BatchConfiguration {
 
-    @Autowired
-    private JobBuilderFactory jobBuilderFactory;
+    private final JobBuilderFactory jobBuilderFactory;
+    private final StepBuilderFactory stepBuilderFactory;
+    private final Environment environment;
+    private final JdbcTemplate jdbcTemplate;
 
-    @Autowired
-    private StepBuilderFactory stepBuilderFactory;
-
-    @Autowired
-    private Environment environment;
-
-//    @Autowired
-//    private DataSource dataSource;
+    public BatchConfiguration(
+            JobBuilderFactory jobBuilderFactory, StepBuilderFactory stepBuilderFactory,
+            Environment environment, JdbcTemplate jdbcTemplate) {
+        this.jobBuilderFactory = jobBuilderFactory;
+        this.stepBuilderFactory = stepBuilderFactory;
+        this.environment = environment;
+        this.jdbcTemplate = jdbcTemplate;
+    }
 
     @Bean
-    ItemReader<TransactionData> revolutTransactionDataReader() {
+    @StepScope
+    ItemReader<TransactionData> revolutTransactionDataReader(
+            @Value("#{jobParameters['from'] ?: null}")String from,
+            @Value("#{jobParameters['to'] ?: null}")String to
+            ) {
         return new RevolutTransactionDataReader(
-                environment.getRequiredProperty("revolut.api.url.transaction"),
-                environment.getRequiredProperty("revolut.api.url.refreshtoken"),
-                environment.getRequiredProperty("revolut.auth.file.path")
+                environment,
+                jdbcTemplate,
+                from,
+                to
         );
     }
 
     @Bean(destroyMethod = "")
     public JdbcCursorItemReader<RevolutAuthInfo> revolutAuthInfoJdbcCursorItemReader(@Qualifier("destinationDB") final DataSource dataSource) {
         JdbcCursorItemReader<RevolutAuthInfo> reader = new JdbcCursorItemReader<>();
-        reader.setSql("select * from trading_parameters.revolut_auth_info limit 1");
+        reader.setSql(environment.getRequiredProperty("sql.select.auth"));
         reader.setDataSource(dataSource);
         reader.setRowMapper(new RevolutAuthInfoDataRowMapper());
         return reader;
     }
 
-
     @Bean
     public FlatFileItemWriter<RevolutAuthInfo> revolutAuthInfoDataFileWriter() throws Exception {
         // create temporary file to store auth info
-        Path tokenFilePath = Paths.get(environment.getProperty("revolut.auth.file.path"));
+        Path tokenFilePath = Paths.get(environment.getRequiredProperty("revolut.auth.file.path"));
         if (!Files.exists(tokenFilePath)) {
             tokenFilePath = Files.createFile(tokenFilePath);
         }
@@ -112,7 +120,7 @@ public class BatchConfiguration {
     public JdbcBatchItemWriter<FlattenTransactionData> transactionDataJDBCWriter(@Qualifier("destinationDB") final DataSource dataSource) {
         return new JdbcBatchItemWriterBuilder<FlattenTransactionData>()
                 .itemSqlParameterSourceProvider(new BeanPropertyItemSqlParameterSourceProvider<>())
-                .sql("INSERT INTO trading_parameters.transaction_data (id, type, state, request_id, reason_code, created_at, updated_at, completed_at, scheduled_for, related_transaction_id, reference, leg_id, leg_amount, leg_currency, leg_bill_amount, leg_bill_currency, leg_account_id, leg_counterparty_id, leg_counterparty_account_id, leg_counterparty_account_type, leg_description, leg_balance, leg_fee, card_number, card_first_name, card_last_name, card_phone, merchant_name, merchant_city, merchant_category_code, merchant_country) VALUES (:id,:type,:state,:requestId,:reasonCode,:createdAt,:updatedAt,:completedAt,:scheduledFor,:relatedTransactionId,:reference,:legId,:legAmount,:legCurrency,:legBillAmount,:legBillCurrency,:legAccountId,:legCounterpartyId,:legCounterpartyAccountId,:legCounterpartyAccountType,:legDescription,:legBalance,:legFee,:cardNumber,:cardFirstName,:cardLastName,:cardPhone,:merchantName,:merchantCity,:merchantCategoryCode,:merchantCountry)")
+                .sql(environment.getRequiredProperty("sql.insert.transactiondata"))
                 .dataSource(dataSource)
                 .build();
     }
@@ -130,7 +138,7 @@ public class BatchConfiguration {
 
     @Bean
     public Job revolutIntegrationJob(@Qualifier("destinationDB") final DataSource dataSource, JobCompletionNotificationListener listener) throws Exception {
-        return jobBuilderFactory.get("revolutIntegrationJob")
+        return jobBuilderFactory.get("revolutIntegrationJob" + System.currentTimeMillis())
                 .incrementer(new RunIdIncrementer())
                 .listener(listener)
                 .flow(step1(dataSource))
@@ -140,21 +148,25 @@ public class BatchConfiguration {
     }
 
     @Bean
-    public Step step2(@Qualifier("destinationDB") final DataSource dataSource) throws Exception {
-        return stepBuilderFactory.get("step2")
-                .<TransactionData, FlattenTransactionData>chunk(10)
-                .reader(revolutTransactionDataReader())
-                .processor(processor())
-                .writer(compositeItemWriter(dataSource))
-                .build();
-    }
-
-    @Bean
     public Step step1(@Qualifier("destinationDB") final DataSource dataSource) throws Exception {
         return stepBuilderFactory.get("step1")
                 .<RevolutAuthInfo, RevolutAuthInfo>chunk(1)
                 .reader(revolutAuthInfoJdbcCursorItemReader(dataSource))
                 .writer(revolutAuthInfoDataFileWriter())
+                .startLimit(1)
+                .build();
+    }
+
+    @Bean
+    public Step step2(@Qualifier("destinationDB") final DataSource dataSource) throws Exception {
+        return stepBuilderFactory.get("step2")
+                .<TransactionData, FlattenTransactionData>chunk(10)
+                .reader(revolutTransactionDataReader(null, null))
+                .processor(processor())
+                .writer(compositeItemWriter(dataSource))
+                .faultTolerant()
+                .retry(Exception.class)
+                .retryLimit(10)
                 .build();
     }
 
