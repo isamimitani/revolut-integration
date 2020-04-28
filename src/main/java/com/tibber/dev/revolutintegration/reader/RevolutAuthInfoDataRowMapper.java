@@ -14,8 +14,16 @@ import java.sql.SQLException;
  */
 public class RevolutAuthInfoDataRowMapper implements RowMapper<RevolutAuthInfo> {
 
+    /**
+     * Maps database response to {@code RevolutAuthInfo} object.
+     *
+     * @param resultSet
+     * @param rowNum
+     * @return {@code RevolutAuthInfo}
+     * @throws SQLException
+     */
     @Override
-    public RevolutAuthInfo mapRow(ResultSet resultSet, int i) throws SQLException {
+    public RevolutAuthInfo mapRow(ResultSet resultSet, int rowNum) throws SQLException {
         return new RevolutAuthInfo(
                 resultSet.getString("refresh_token"),
                 resultSet.getString("client_id"),

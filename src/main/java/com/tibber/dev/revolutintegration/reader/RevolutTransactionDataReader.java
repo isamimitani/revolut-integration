@@ -67,6 +67,12 @@ public class RevolutTransactionDataReader implements ItemReader<TransactionData>
         objectMapper.configure(DeserializationFeature.FAIL_ON_UNKNOWN_PROPERTIES, false);
     }
 
+    /**
+     * Initializes access token and transaction data and reads transaction data one by one.
+     * Deletes also old transaction data when fetching is completed.
+     *
+     * @return {@code TransactionData}
+     */
     @Override
     public TransactionData read() {
         if (accessTokenIsNotInitialized()) {
@@ -93,14 +99,27 @@ public class RevolutTransactionDataReader implements ItemReader<TransactionData>
         return nextData;
     }
 
+
+    /**
+     * @return {@code boolean} whether access token is fetched or not.
+     */
     private boolean accessTokenIsNotInitialized() {
         return this.tokenResponse == null;
     }
 
+    /**
+     * @return {@code boolean} whether transaction data is fetched or not.
+     */
     private boolean transactionDataIsNotInitialized() {
         return this.transactionData == null;
     }
 
+
+    /**
+     * Calls Revolut API and fetches transaction data for specified dates
+     *
+     * @return {@code List} of fetched {@code Transactiondata}
+     */
     private List<TransactionData> fetchTransactionDataFromAPI() {
         List<TransactionData> list = null;
         String[] command = new String[]{
@@ -125,8 +144,13 @@ public class RevolutTransactionDataReader implements ItemReader<TransactionData>
         return list;
     }
 
+    /**
+     * Calls Revolut API and refreshes access token
+     *
+     * @return {@code RefreshTokenResponse}
+     */
     private RefreshTokenResponse fetchAccessTokenFromAPI() {
-        RefreshTokenResponse result = null;
+        RefreshTokenResponse result;
 
         RevolutAuthInfo authInfo = getAuthInfoFromFile();
         log.debug(authInfo.toString());
@@ -152,6 +176,12 @@ public class RevolutTransactionDataReader implements ItemReader<TransactionData>
         return result;
     }
 
+    /**
+     * Sends received request command and converts response to string
+     *
+     * @param command
+     * @return response string
+     */
     private String sendRequest(String[] command) {
         StringBuilder textBuilder = new StringBuilder();
         ProcessBuilder processBuilder = new ProcessBuilder(command);
@@ -176,6 +206,13 @@ public class RevolutTransactionDataReader implements ItemReader<TransactionData>
         return textBuilder.toString();
     }
 
+    /**
+     * Parses received Json string to {@code RefreshTokenResponse} object
+     *
+     * @param json
+     * @return {@code RefreshTokenResponse}
+     * @throws JsonProcessingException
+     */
     private RefreshTokenResponse parseStringToRefreshTokenResponse(String json) throws JsonProcessingException {
         RefreshTokenResponse response;
         response = objectMapper.readValue(json, RefreshTokenResponse.class);
@@ -183,6 +220,13 @@ public class RevolutTransactionDataReader implements ItemReader<TransactionData>
         return response;
     }
 
+    /**
+     * Parses received Json string to {@code List<TransactionData>} object
+     *
+     * @param json
+     * @return {@code List<TransactionData>}
+     * @throws JsonProcessingException
+     */
     private List<TransactionData> parseStringToTransactionDataList(String json) throws JsonProcessingException {
         List<TransactionData> list;
         list = Arrays.asList(objectMapper.readValue(json, TransactionData[].class));
@@ -190,11 +234,22 @@ public class RevolutTransactionDataReader implements ItemReader<TransactionData>
         return list;
     }
 
+    /**
+     * Returns new {@code LocalDate} object contains current date subtracted by specified number of days
+     *
+     * @param days
+     * @return {@code LocalDate}
+     */
     private LocalDate getDateMinusDays(int days) {
         LocalDate today = LocalDate.now();
         return today.minus(Period.ofDays(days));
     }
 
+    /**
+     * Reads auth information from temporary file and returns {@code RevolutAuthInfo} object
+     *
+     * @return {@code RevolutAuthInfo}
+     */
     private RevolutAuthInfo getAuthInfoFromFile() {
         StringBuilder contentBuilder = new StringBuilder();
         try (Stream<String> stream = Files.lines(Paths.get(environment.getRequiredProperty("revolut.auth.file.path")), StandardCharsets.UTF_8)) {
@@ -212,11 +267,14 @@ public class RevolutTransactionDataReader implements ItemReader<TransactionData>
         return authInfo;
     }
 
+    /**
+     * Deletes old transaction data from database
+     */
     private void removeTransactionDataFromDB() {
         LocalDate tomorrow = to.plus(Period.ofDays(1));
-        log.debug("Deleting transaction data from " + from.toString() + " to " + to.toString());
+        log.debug("Deleting transaction data from " + from.toString() + " to " + tomorrow.toString());
         int deletedRows = jdbcTemplate.update(environment.getRequiredProperty("sql.delete.transactiondata"),
-                new Object[]{from.toString(), to.toString()});
+                new Object[]{from.toString(), tomorrow.toString()});
         log.debug("Deleted " + deletedRows + " rows.");
     }
 }

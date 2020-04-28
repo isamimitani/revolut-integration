@@ -16,6 +16,13 @@ public class FlattenTransactionDataProcessor implements ItemProcessor<Transactio
 
     private static final Logger log = LoggerFactory.getLogger(FlattenTransactionDataProcessor.class);
 
+    /**
+     * Converts and flatten transaction data from Revolut API.
+     * Assumes that Legs array contains only one onject
+     *
+     * @param transactionData
+     * @return {@code FlattenTransactionData}
+     */
     @Override
     public FlattenTransactionData process(final TransactionData transactionData) {
         final FlattenTransactionData flattenTransactionData = new FlattenTransactionData();

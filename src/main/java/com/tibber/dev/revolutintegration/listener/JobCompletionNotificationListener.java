@@ -35,6 +35,13 @@ public class JobCompletionNotificationListener extends JobExecutionListenerSuppo
         this.environment = environment;
     }
 
+
+    /**
+     * Defines tasks to execute after job execution.
+     * Deletes temporary file for auth information when job is completed.
+     *
+     * @param jobExecution
+     */
     @Override
     public void afterJob(JobExecution jobExecution) {
         if (jobExecution.getStatus() == BatchStatus.COMPLETED) {

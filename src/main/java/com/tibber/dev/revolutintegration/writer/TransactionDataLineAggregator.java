@@ -15,6 +15,12 @@ public class TransactionDataLineAggregator implements LineAggregator<FlattenTran
 
     private ObjectMapper objectMapper = new ObjectMapper();
 
+    /**
+     * Converts {@code FlattenTransactionData} object to Json string
+     *
+     * @param transactionData
+     * @return Json string
+     */
     @Override
     public String aggregate(FlattenTransactionData transactionData) {
         try {

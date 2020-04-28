@@ -15,6 +15,12 @@ public class RevolutAuthInfoDataLineAggregator implements LineAggregator<Revolut
 
     private ObjectMapper objectMapper = new ObjectMapper();
 
+    /**
+     * Converts {@code RevolutAuthInfo} object to Json string
+     *
+     * @param authInfo
+     * @return Json string
+     */
     @Override
     public String aggregate(RevolutAuthInfo authInfo) {
         try {

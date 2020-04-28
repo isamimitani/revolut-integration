@@ -1,5 +1,6 @@
 package com.tibber.dev.revolutintegration.model;
 
+import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonSetter;
 
 /**
@@ -8,6 +9,7 @@ import com.fasterxml.jackson.annotation.JsonSetter;
  * @auther Isami Mitani
  * @version 1.0
  */
+@JsonIgnoreProperties(ignoreUnknown = true)
 public class RefreshTokenResponse {
 
     private String accessToken;
