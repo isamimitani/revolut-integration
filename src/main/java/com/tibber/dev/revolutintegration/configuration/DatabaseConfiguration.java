@@ -10,6 +10,13 @@ import org.springframework.jdbc.core.JdbcTemplate;
 
 import javax.sql.DataSource;
 
+/**
+ * A configuration class for database settings.
+ * It defines {@code DataSource} for batch meta data tables and destination to save transaction data / to fetch auth information
+ *
+ * @auther Isami Mitani
+ * @version 1.0
+ */
 @Configuration
 public class DatabaseConfiguration {
 
@@ -27,7 +34,7 @@ public class DatabaseConfiguration {
     }
 
     @Bean
-    public JdbcTemplate createJdbcTemplate(@Qualifier("destinationDB") DataSource dataSource){
+    public JdbcTemplate createJdbcTemplate(@Qualifier("destinationDB") DataSource dataSource) {
         return new JdbcTemplate(dataSource);
     }
 

@@ -40,6 +40,14 @@ import java.nio.file.Paths;
 import java.util.ArrayList;
 import java.util.List;
 
+/**
+ * A configuration class for batch job and its steps for Revolut integration.
+ * In the first step, it fetches authentication information from database and save it in a temporary file.
+ * In the second step, it fetches transaction data from Revolut API and save it to destination database.
+ *
+ * @auther Isami Mitani
+ * @version 1.0
+ */
 @Configuration
 @EnableBatchProcessing
 public class BatchConfiguration {
@@ -61,9 +69,9 @@ public class BatchConfiguration {
     @Bean
     @StepScope
     ItemReader<TransactionData> revolutTransactionDataReader(
-            @Value("#{jobParameters['from'] ?: null}")String from,
-            @Value("#{jobParameters['to'] ?: null}")String to
-            ) {
+            @Value("#{jobParameters['from'] ?: null}") String from,
+            @Value("#{jobParameters['to'] ?: null}") String to
+    ) {
         return new RevolutTransactionDataReader(
                 environment,
                 jdbcTemplate,
@@ -83,7 +91,7 @@ public class BatchConfiguration {
 
     @Bean
     public FlatFileItemWriter<RevolutAuthInfo> revolutAuthInfoDataFileWriter() throws Exception {
-        // create temporary file to store auth info
+        // create temporary file to store auth information
         Path tokenFilePath = Paths.get(environment.getRequiredProperty("revolut.auth.file.path"));
         if (!Files.exists(tokenFilePath)) {
             tokenFilePath = Files.createFile(tokenFilePath);

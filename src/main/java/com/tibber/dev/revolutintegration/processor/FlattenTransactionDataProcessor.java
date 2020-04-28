@@ -6,6 +6,12 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.batch.item.ItemProcessor;
 
+/**
+ * A processor class to flatten transaction data from Revolut API.
+ *
+ * @auther Isami Mitani
+ * @version 1.0
+ */
 public class FlattenTransactionDataProcessor implements ItemProcessor<TransactionData, FlattenTransactionData> {
 
     private static final Logger log = LoggerFactory.getLogger(FlattenTransactionDataProcessor.class);

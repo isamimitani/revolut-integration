@@ -6,6 +6,12 @@ import org.springframework.jdbc.core.RowMapper;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 
+/**
+ * A mapper class to map auth information from database to Java object.
+ *
+ * @auther Isami Mitani
+ * @version 1.0
+ */
 public class RevolutAuthInfoDataRowMapper implements RowMapper<RevolutAuthInfo> {
 
     @Override

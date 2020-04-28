@@ -5,6 +5,12 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.tibber.dev.revolutintegration.model.RevolutAuthInfo;
 import org.springframework.batch.item.file.transform.LineAggregator;
 
+/**
+ * A line aggregator class to aggregate {@link com.tibber.dev.revolutintegration.model.RevolutAuthInfo} to Json string.
+ *
+ * @auther Isami Mitani
+ * @version 1.0
+ */
 public class RevolutAuthInfoDataLineAggregator implements LineAggregator<RevolutAuthInfo> {
 
     private ObjectMapper objectMapper = new ObjectMapper();

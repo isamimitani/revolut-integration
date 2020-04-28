@@ -2,6 +2,12 @@ package com.tibber.dev.revolutintegration.model;
 
 import com.fasterxml.jackson.annotation.JsonSetter;
 
+/**
+ * A model class to hold response data from refresh token API.
+ *
+ * @auther Isami Mitani
+ * @version 1.0
+ */
 public class RefreshTokenResponse {
 
     private String accessToken;

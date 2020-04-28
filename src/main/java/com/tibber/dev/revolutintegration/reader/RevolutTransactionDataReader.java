@@ -11,7 +11,6 @@ import org.slf4j.LoggerFactory;
 import org.springframework.batch.item.ItemReader;
 import org.springframework.core.env.Environment;
 import org.springframework.jdbc.core.JdbcTemplate;
-import org.springframework.jdbc.core.namedparam.MapSqlParameterSource;
 
 import java.io.*;
 import java.nio.charset.Charset;
@@ -24,6 +23,14 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Stream;
 
+/**
+ * A reader class to read transaction data from Revolut Business API.
+ * It refreshes access token before fetching transaction data and
+ * deleting old data from database when fetching is completed
+ *
+ * @auther Isami Mitani
+ * @version 1.0
+ */
 public class RevolutTransactionDataReader implements ItemReader<TransactionData> {
 
     private static final Logger log = LoggerFactory.getLogger(RevolutTransactionDataReader.class);
@@ -67,8 +74,9 @@ public class RevolutTransactionDataReader implements ItemReader<TransactionData>
         }
 
         if (tokenResponse.getError() != null) {
-            log.error("Failed to get access token. Terminate batch job. error: " + tokenResponse.getError() + ", error_description: " + tokenResponse.getErrorDescription());
-            throw new RuntimeException("Failed to get access token. Terminate batch job. error: " + tokenResponse.getError() + ", error_description: " + tokenResponse.getErrorDescription());
+            String errorMessage = "Failed to get access token. Terminate batch job. error: " + tokenResponse.getError() + ", error_description: " + tokenResponse.getErrorDescription();
+            log.error(errorMessage);
+            throw new RuntimeException(errorMessage);
         }
 
         if (transactionDataIsNotInitialized()) {
@@ -104,11 +112,15 @@ public class RevolutTransactionDataReader implements ItemReader<TransactionData>
         System.out.println(command[1]);
 
         String response = sendRequest(command);
-        // todo: if result is "{"message":"The request should be authorized."}" handle error
+        // if result contains "{"message":"The request should be authorized."}" throw exception
+        if(response.contains("message")) {
+            throw new RuntimeException(response);
+        }
         try {
             list = parseStringToTransactionDataList(response);
+            log.info("Fetched transaction data size: " + list.size());
         } catch (JsonProcessingException e) {
-            e.printStackTrace();
+            throw new RuntimeException(e.getMessage(), e);
         }
         return list;
     }
@@ -117,7 +129,7 @@ public class RevolutTransactionDataReader implements ItemReader<TransactionData>
         RefreshTokenResponse result = null;
 
         RevolutAuthInfo authInfo = getAuthInfoFromFile();
-        log.info(authInfo.toString());
+        log.debug(authInfo.toString());
 
         String[] command = new String[]{
                 "curl",
@@ -134,17 +146,16 @@ public class RevolutTransactionDataReader implements ItemReader<TransactionData>
         String response = sendRequest(command);
         try {
             result = parseStringToRefreshTokenResponse(response);
-        } catch (IOException ex) {
-            ex.printStackTrace();
+        } catch (JsonProcessingException e) {
+            throw new RuntimeException(e.getMessage(), e);
         }
-        // todo: handle {"error":"invalid_request","error_description":"The Token has expired on Thu Apr 23 10:23:47 UTC 2020."}
         return result;
     }
 
     private String sendRequest(String[] command) {
         StringBuilder textBuilder = new StringBuilder();
         ProcessBuilder processBuilder = new ProcessBuilder(command);
-        // set working directory to
+        // set working directory to current directory
         processBuilder.directory(new File(System.getProperty("user.dir")));
 
         try {
@@ -160,22 +171,22 @@ public class RevolutTransactionDataReader implements ItemReader<TransactionData>
                 System.out.println(textBuilder);
             }
         } catch (IOException e) {
-            e.printStackTrace();
+            throw new RuntimeException(e.getMessage(), e);
         }
         return textBuilder.toString();
     }
 
     private RefreshTokenResponse parseStringToRefreshTokenResponse(String json) throws JsonProcessingException {
-        RefreshTokenResponse response = null;
+        RefreshTokenResponse response;
         response = objectMapper.readValue(json, RefreshTokenResponse.class);
-        System.out.println("response: " + response);
+        log.debug("response: " + response);
         return response;
     }
 
     private List<TransactionData> parseStringToTransactionDataList(String json) throws JsonProcessingException {
-        List<TransactionData> list = null;
+        List<TransactionData> list;
         list = Arrays.asList(objectMapper.readValue(json, TransactionData[].class));
-        System.out.println("list: " + list);
+        log.debug("list: " + list);
         return list;
     }
 
@@ -189,20 +200,21 @@ public class RevolutTransactionDataReader implements ItemReader<TransactionData>
         try (Stream<String> stream = Files.lines(Paths.get(environment.getRequiredProperty("revolut.auth.file.path")), StandardCharsets.UTF_8)) {
             stream.forEach(s -> contentBuilder.append(s).append("\n"));
         } catch (IOException e) {
-            e.printStackTrace();
+            throw new RuntimeException(e.getMessage(), e);
         }
-        RevolutAuthInfo authInfo = null;
+
+        RevolutAuthInfo authInfo;
         try {
             authInfo = objectMapper.readValue(contentBuilder.toString(), RevolutAuthInfo.class);
         } catch (JsonProcessingException e) {
-            e.printStackTrace();
+            throw new RuntimeException(e.getMessage(), e);
         }
         return authInfo;
     }
 
     private void removeTransactionDataFromDB() {
         LocalDate tomorrow = to.plus(Period.ofDays(1));
-        log.debug("delete transaction data from " + from.toString() + " to " + tomorrow.toString());
+        log.debug("Deleting transaction data from " + from.toString() + " to " + to.toString());
         int deletedRows = jdbcTemplate.update(environment.getRequiredProperty("sql.delete.transactiondata"),
                 new Object[]{from.toString(), to.toString()});
         log.debug("Deleted " + deletedRows + " rows.");

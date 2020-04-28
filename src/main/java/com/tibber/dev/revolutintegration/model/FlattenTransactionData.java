@@ -1,5 +1,11 @@
 package com.tibber.dev.revolutintegration.model;
 
+/**
+ * A model class to hold flattened transaction data.
+ *
+ * @auther Isami Mitani
+ * @version 1.0
+ */
 public class FlattenTransactionData {
 
     private String id;

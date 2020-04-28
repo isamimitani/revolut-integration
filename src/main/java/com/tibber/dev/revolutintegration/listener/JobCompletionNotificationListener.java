@@ -15,6 +15,12 @@ import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 
+/**
+ * A listener class to define tasks to execute before / after batch job.
+ *
+ * @auther Isami Mitani
+ * @version 1.0
+ */
 @Component
 public class JobCompletionNotificationListener extends JobExecutionListenerSupport {
 

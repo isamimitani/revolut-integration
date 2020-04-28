@@ -7,6 +7,12 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
+/**
+ * A model class to hold transaction data from Revolut API.
+ *
+ * @auther Isami Mitani
+ * @version 1.0
+ */
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class TransactionData {
 
