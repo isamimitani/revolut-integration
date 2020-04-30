@@ -15,7 +15,7 @@ import java.sql.SQLException;
 public class RevolutAuthInfoDataRowMapper implements RowMapper<RevolutAuthInfo> {
 
     /**
-     * Maps database response to {@code RevolutAuthInfo} object.
+     * Maps response from database to {@code RevolutAuthInfo} object.
      *
      * @param resultSet
      * @param rowNum

@@ -1,5 +1,6 @@
 package com.tibber.dev.revolutintegration.configuration;
 
+import com.tibber.dev.revolutintegration.listener.ItemCountListener;
 import com.tibber.dev.revolutintegration.model.FlattenTransactionData;
 import com.tibber.dev.revolutintegration.model.RevolutAuthInfo;
 import com.tibber.dev.revolutintegration.model.TransactionData;
@@ -163,6 +164,16 @@ public class BatchConfiguration {
                 .build();
     }
 
+    /**
+     * Returns a listener class which counts processed data count
+     *
+     * @return {@code ItemCountListener}
+     */
+    @Bean
+    public ItemCountListener itemCountListener() {
+        return new ItemCountListener();
+    }
+
     @Bean
     public CompositeItemWriter<FlattenTransactionData> compositeItemWriter(@Qualifier("destinationDB") final DataSource dataSource) throws Exception {
         List<ItemWriter<? super FlattenTransactionData>> writers = new ArrayList<>(2);
@@ -229,6 +240,7 @@ public class BatchConfiguration {
                 .faultTolerant()
                 .retry(Exception.class)
                 .retryLimit(10)
+                .listener(itemCountListener())
                 .build();
     }
 

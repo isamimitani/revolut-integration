@@ -21,6 +21,7 @@ import java.time.LocalDate;
 import java.time.Period;
 import java.util.Arrays;
 import java.util.List;
+import java.util.TimeZone;
 import java.util.stream.Stream;
 
 /**
@@ -53,8 +54,8 @@ public class RevolutTransactionDataReader implements ItemReader<TransactionData>
         this.refreshTokenApiUrl = environment.getRequiredProperty("revolut.api.url.refreshtoken");
         nextDataIndex = 0;
 
-        from = getDateMinusDays(Integer.parseInt(environment.getRequiredProperty("days.latest")));
-        to = getDateMinusDays(1);
+        from = getDateMinusDays(Integer.parseInt(environment.getRequiredProperty("days.before.from")));
+        to = getDateMinusDays(Integer.parseInt(environment.getRequiredProperty("days.before.to")));
         if (fromDate != null) {
             from = LocalDate.parse(fromDate);
         }
@@ -121,7 +122,7 @@ public class RevolutTransactionDataReader implements ItemReader<TransactionData>
      * @return {@code List} of fetched {@code Transactiondata}
      */
     private List<TransactionData> fetchTransactionDataFromAPI() {
-        List<TransactionData> list = null;
+        List<TransactionData> list;
         String[] command = new String[]{
                 "curl",
                 transactionApiUrl + "?from=" + from.toString() + "&to=" + to.toString(),
@@ -198,8 +199,8 @@ public class RevolutTransactionDataReader implements ItemReader<TransactionData>
                 while ((c = reader.read()) != -1) {
                     textBuilder.append((char) c);
                 }
-                System.out.println(textBuilder);
             }
+            System.out.println(textBuilder);
         } catch (IOException e) {
             throw new RuntimeException(e.getMessage(), e);
         }
@@ -213,7 +214,7 @@ public class RevolutTransactionDataReader implements ItemReader<TransactionData>
      * @return {@code RefreshTokenResponse}
      * @throws JsonProcessingException
      */
-    private RefreshTokenResponse parseStringToRefreshTokenResponse(String json) throws JsonProcessingException {
+    public RefreshTokenResponse parseStringToRefreshTokenResponse(String json) throws JsonProcessingException {
         RefreshTokenResponse response;
         response = objectMapper.readValue(json, RefreshTokenResponse.class);
         log.debug("response: " + response);
@@ -272,7 +273,7 @@ public class RevolutTransactionDataReader implements ItemReader<TransactionData>
      */
     private void removeTransactionDataFromDB() {
         LocalDate tomorrow = to.plus(Period.ofDays(1));
-        log.debug("Deleting transaction data from " + from.toString() + " to " + tomorrow.toString());
+        log.debug("Deleting transaction data from " + from.toString() + " to " + to.toString());
         int deletedRows = jdbcTemplate.update(environment.getRequiredProperty("sql.delete.transactiondata"),
                 new Object[]{from.toString(), tomorrow.toString()});
         log.debug("Deleted " + deletedRows + " rows.");

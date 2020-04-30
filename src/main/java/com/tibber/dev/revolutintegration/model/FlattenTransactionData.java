@@ -1,5 +1,7 @@
 package com.tibber.dev.revolutintegration.model;
 
+import java.util.Date;
+
 /**
  * A model class to hold flattened transaction data.
  *
@@ -13,9 +15,9 @@ public class FlattenTransactionData {
     private String requestId;
     private String state;
     private String reasonCode;
-    private String createdAt;
-    private String updatedAt;
-    private String completedAt;
+    private Date createdAt;
+    private Date updatedAt;
+    private Date completedAt;
     private String scheduledFor;
     private String relatedTransactionId;
     private String reference;
@@ -80,27 +82,27 @@ public class FlattenTransactionData {
         this.reasonCode = reasonCode;
     }
 
-    public String getCreatedAt() {
+    public Date getCreatedAt() {
         return createdAt;
     }
 
-    public void setCreatedAt(String createdAt) {
+    public void setCreatedAt(Date createdAt) {
         this.createdAt = createdAt;
     }
 
-    public String getUpdatedAt() {
+    public Date getUpdatedAt() {
         return updatedAt;
     }
 
-    public void setUpdatedAt(String updatedAt) {
+    public void setUpdatedAt(Date updatedAt) {
         this.updatedAt = updatedAt;
     }
 
-    public String getCompletedAt() {
+    public Date getCompletedAt() {
         return completedAt;
     }
 
-    public void setCompletedAt(String completedAt) {
+    public void setCompletedAt(Date completedAt) {
         this.completedAt = completedAt;
     }
 

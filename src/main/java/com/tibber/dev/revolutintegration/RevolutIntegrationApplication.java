@@ -6,6 +6,8 @@ import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.context.annotation.Bean;
 import org.springframework.web.client.RestTemplate;
 
+import java.util.TimeZone;
+
 /**
  * An application class to start this Spring Boot application.
  *
@@ -21,6 +23,7 @@ public class RevolutIntegrationApplication {
 //    }
 
     public static void main(String[] args) {
+        TimeZone.setDefault(TimeZone.getTimeZone("UTC"));
         ConfigurableApplicationContext applicationContext =
                 SpringApplication.run(RevolutIntegrationApplication.class, args);
         System.exit(SpringApplication.exit(applicationContext));

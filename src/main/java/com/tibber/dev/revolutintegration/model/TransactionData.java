@@ -3,6 +3,7 @@ package com.tibber.dev.revolutintegration.model;
 import com.fasterxml.jackson.annotation.JsonIgnoreProperties;
 import com.fasterxml.jackson.annotation.JsonSetter;
 
+import java.util.Date;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -10,8 +11,8 @@ import java.util.Map;
 /**
  * A model class to hold transaction data from Revolut API.
  *
- * @auther Isami Mitani
  * @version 1.0
+ * @auther Isami Mitani
  */
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class TransactionData {
@@ -21,9 +22,9 @@ public class TransactionData {
     private String requestId;
     private String state;
     private String reasonCode;
-    private String createdAt;
-    private String updatedAt;
-    private String completedAt;
+    private Date createdAt;
+    private Date updatedAt;
+    private Date completedAt;
     private String scheduledFor;
     private String relatedTransactionId;
     private String reference;
@@ -81,30 +82,30 @@ public class TransactionData {
         this.reasonCode = reasonCode;
     }
 
-    public String getCreatedAt() {
+    public Date getCreatedAt() {
         return createdAt;
     }
 
     @JsonSetter("created_at")
-    public void setCreatedAt(String createdAt) {
+    public void setCreatedAt(Date createdAt) {
         this.createdAt = createdAt;
     }
 
-    public String getUpdatedAt() {
+    public Date getUpdatedAt() {
         return updatedAt;
     }
 
     @JsonSetter("updated_at")
-    public void setUpdatedAt(String updatedAt) {
+    public void setUpdatedAt(Date updatedAt) {
         this.updatedAt = updatedAt;
     }
 
-    public String getCompletedAt() {
+    public Date getCompletedAt() {
         return completedAt;
     }
 
     @JsonSetter("completed_at")
-    public void setCompletedAt(String completedAt) {
+    public void setCompletedAt(Date completedAt) {
         this.completedAt = completedAt;
     }
 
