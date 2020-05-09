@@ -1,15 +1,14 @@
 package com.tibber.dev.revolutintegration.configuration;
 
 import com.tibber.dev.revolutintegration.listener.ItemCountListener;
+import com.tibber.dev.revolutintegration.listener.JobCompletionNotificationListener;
 import com.tibber.dev.revolutintegration.model.FlattenTransactionData;
 import com.tibber.dev.revolutintegration.model.RevolutAuthInfo;
 import com.tibber.dev.revolutintegration.model.TransactionData;
-import com.tibber.dev.revolutintegration.listener.JobCompletionNotificationListener;
 import com.tibber.dev.revolutintegration.processor.FlattenTransactionDataProcessor;
-import com.tibber.dev.revolutintegration.reader.RevolutTransactionDataReader;
 import com.tibber.dev.revolutintegration.reader.RevolutAuthInfoDataRowMapper;
+import com.tibber.dev.revolutintegration.reader.RevolutTransactionDataReader;
 import com.tibber.dev.revolutintegration.writer.RevolutAuthInfoDataLineAggregator;
-import com.tibber.dev.revolutintegration.writer.TransactionDataLineAggregator;
 import org.springframework.batch.core.Job;
 import org.springframework.batch.core.Step;
 import org.springframework.batch.core.configuration.annotation.EnableBatchProcessing;
@@ -18,13 +17,11 @@ import org.springframework.batch.core.configuration.annotation.StepBuilderFactor
 import org.springframework.batch.core.configuration.annotation.StepScope;
 import org.springframework.batch.core.launch.support.RunIdIncrementer;
 import org.springframework.batch.item.ItemReader;
-import org.springframework.batch.item.ItemWriter;
 import org.springframework.batch.item.database.BeanPropertyItemSqlParameterSourceProvider;
 import org.springframework.batch.item.database.JdbcBatchItemWriter;
 import org.springframework.batch.item.database.JdbcCursorItemReader;
 import org.springframework.batch.item.database.builder.JdbcBatchItemWriterBuilder;
 import org.springframework.batch.item.file.FlatFileItemWriter;
-import org.springframework.batch.item.support.CompositeItemWriter;
 import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
@@ -34,20 +31,17 @@ import org.springframework.core.io.FileSystemResource;
 import org.springframework.jdbc.core.JdbcTemplate;
 
 import javax.sql.DataSource;
-import java.io.File;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.ArrayList;
-import java.util.List;
 
 /**
  * A configuration class for batch job and its steps for Revolut integration.
  * In the first step, it fetches authentication information from database and save it in a temporary file.
  * In the second step, it fetches transaction data from Revolut API and save it to destination database.
  *
- * @auther Isami Mitani
  * @version 1.0
+ * @auther Isami Mitani
  */
 @Configuration
 @EnableBatchProcessing
@@ -71,7 +65,7 @@ public class BatchConfiguration {
      * Returns a reader instance to read transaction data from Revolut API
      *
      * @param from from date to fetch data if provided
-     * @param to to date to fetch data if provided
+     * @param to   to date to fetch data if provided
      * @return {@code ItemReader<TransactionData>}
      */
     @Bean
@@ -114,9 +108,8 @@ public class BatchConfiguration {
         // create temporary file to store auth information
         Path tokenFilePath = Paths.get(environment.getRequiredProperty("revolut.auth.file.path"));
         if (!Files.exists(tokenFilePath)) {
-            tokenFilePath = Files.createFile(tokenFilePath);
+            Files.createFile(tokenFilePath);
         }
-        System.out.println(">> output path: " + tokenFilePath.normalize().toAbsolutePath());
 
         FlatFileItemWriter<RevolutAuthInfo> itemWriter = new FlatFileItemWriter<>();
         itemWriter.setLineAggregator(new RevolutAuthInfoDataLineAggregator());
@@ -133,20 +126,6 @@ public class BatchConfiguration {
     @Bean
     public FlattenTransactionDataProcessor processor() {
         return new FlattenTransactionDataProcessor();
-    }
-
-    @Bean
-    public FlatFileItemWriter<FlattenTransactionData> transactionDataFileWriter() throws Exception {
-        // create temporary file to store data
-        String testDataOutputPath =
-                File.createTempFile("test", ".out", new File(System.getProperty("user.dir"))).getAbsolutePath();
-        System.out.println(">> output path: " + testDataOutputPath);
-
-        FlatFileItemWriter<FlattenTransactionData> itemWriter = new FlatFileItemWriter<>();
-        itemWriter.setLineAggregator(new TransactionDataLineAggregator());
-        itemWriter.setResource(new FileSystemResource(testDataOutputPath));
-        itemWriter.afterPropertiesSet();
-        return itemWriter;
     }
 
     /**
@@ -172,17 +151,6 @@ public class BatchConfiguration {
     @Bean
     public ItemCountListener itemCountListener() {
         return new ItemCountListener();
-    }
-
-    @Bean
-    public CompositeItemWriter<FlattenTransactionData> compositeItemWriter(@Qualifier("destinationDB") final DataSource dataSource) throws Exception {
-        List<ItemWriter<? super FlattenTransactionData>> writers = new ArrayList<>(2);
-        writers.add(transactionDataFileWriter());
-        writers.add(transactionDataJDBCWriter(dataSource));
-        CompositeItemWriter<FlattenTransactionData> itemWriter = new CompositeItemWriter<>();
-        itemWriter.setDelegates(writers);
-        itemWriter.afterPropertiesSet();
-        return itemWriter;
     }
 
     /**
@@ -236,7 +204,7 @@ public class BatchConfiguration {
                 .<TransactionData, FlattenTransactionData>chunk(10)
                 .reader(revolutTransactionDataReader(null, null))
                 .processor(processor())
-                .writer(compositeItemWriter(dataSource))
+                .writer(transactionDataJDBCWriter(dataSource))
                 .faultTolerant()
                 .retry(Exception.class)
                 .retryLimit(10)

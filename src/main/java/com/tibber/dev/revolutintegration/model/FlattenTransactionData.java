@@ -5,8 +5,8 @@ import java.util.Date;
 /**
  * A model class to hold flattened transaction data.
  *
- * @auther Isami Mitani
  * @version 1.0
+ * @auther Isami Mitani
  */
 public class FlattenTransactionData {
 
@@ -33,6 +33,12 @@ public class FlattenTransactionData {
     private String legDescription;
     private String legBalance;
     private String legFee;
+    private String legId2;
+    private String legAccountId2;
+    private String legAmount2;
+    private String legCurrency2;
+    private String legDescription2;
+    private String legBalance2;
     private String cardNumber;
     private String cardFirstName;
     private String cardLastName;
@@ -226,6 +232,54 @@ public class FlattenTransactionData {
         this.legFee = legFee;
     }
 
+    public String getLegId2() {
+        return legId2;
+    }
+
+    public void setLegId2(String legId2) {
+        this.legId2 = legId2;
+    }
+
+    public String getLegAccountId2() {
+        return legAccountId2;
+    }
+
+    public void setLegAccountId2(String legAccountId2) {
+        this.legAccountId2 = legAccountId2;
+    }
+
+    public String getLegAmount2() {
+        return legAmount2;
+    }
+
+    public void setLegAmount2(String legAmount2) {
+        this.legAmount2 = legAmount2;
+    }
+
+    public String getLegCurrency2() {
+        return legCurrency2;
+    }
+
+    public void setLegCurrency2(String legCurrency2) {
+        this.legCurrency2 = legCurrency2;
+    }
+
+    public String getLegDescription2() {
+        return legDescription2;
+    }
+
+    public void setLegDescription2(String legDescription2) {
+        this.legDescription2 = legDescription2;
+    }
+
+    public String getLegBalance2() {
+        return legBalance2;
+    }
+
+    public void setLegBalance2(String legBalance2) {
+        this.legBalance2 = legBalance2;
+    }
+
     public String getCardNumber() {
         return cardNumber;
     }
@@ -298,9 +352,9 @@ public class FlattenTransactionData {
                 ", requestId='" + requestId + '\'' +
                 ", state='" + state + '\'' +
                 ", reasonCode='" + reasonCode + '\'' +
-                ", createdAt='" + createdAt + '\'' +
-                ", updatedAt='" + updatedAt + '\'' +
-                ", completedAt='" + completedAt + '\'' +
+                ", createdAt=" + createdAt +
+                ", updatedAt=" + updatedAt +
+                ", completedAt=" + completedAt +
                 ", scheduledFor='" + scheduledFor + '\'' +
                 ", relatedTransactionId='" + relatedTransactionId + '\'' +
                 ", reference='" + reference + '\'' +
@@ -312,10 +366,16 @@ public class FlattenTransactionData {
                 ", legAccountId='" + legAccountId + '\'' +
                 ", legCounterpartyId='" + legCounterpartyId + '\'' +
                 ", legCounterpartyAccountId='" + legCounterpartyAccountId + '\'' +
-                ", leg_counterparty_account_typeype='" + legCounterpartyAccountType + '\'' +
+                ", legCounterpartyAccountType='" + legCounterpartyAccountType + '\'' +
                 ", legDescription='" + legDescription + '\'' +
                 ", legBalance='" + legBalance + '\'' +
                 ", legFee='" + legFee + '\'' +
+                ", legId2='" + legId2 + '\'' +
+                ", legAccountId2='" + legAccountId2 + '\'' +
+                ", legAmount2='" + legAmount2 + '\'' +
+                ", legCurrency2='" + legCurrency2 + '\'' +
+                ", legDescription2='" + legDescription2 + '\'' +
+                ", legBalance2='" + legBalance2 + '\'' +
                 ", cardNumber='" + cardNumber + '\'' +
                 ", cardFirstName='" + cardFirstName + '\'' +
                 ", cardLastName='" + cardLastName + '\'' +

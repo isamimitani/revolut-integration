@@ -21,7 +21,6 @@ import java.time.LocalDate;
 import java.time.Period;
 import java.util.Arrays;
 import java.util.List;
-import java.util.TimeZone;
 import java.util.stream.Stream;
 
 /**
@@ -29,8 +28,8 @@ import java.util.stream.Stream;
  * It refreshes access token before fetching transaction data and
  * deleting old data from database when fetching is completed
  *
- * @auther Isami Mitani
  * @version 1.0
+ * @auther Isami Mitani
  */
 public class RevolutTransactionDataReader implements ItemReader<TransactionData> {
 
@@ -40,6 +39,7 @@ public class RevolutTransactionDataReader implements ItemReader<TransactionData>
     private final JdbcTemplate jdbcTemplate;
     private final String transactionApiUrl;
     private final String refreshTokenApiUrl;
+    private final String encryptionKey;
     private LocalDate from;
     private LocalDate to;
     private ObjectMapper objectMapper;
@@ -52,6 +52,7 @@ public class RevolutTransactionDataReader implements ItemReader<TransactionData>
         this.jdbcTemplate = jdbcTemplate;
         this.transactionApiUrl = environment.getRequiredProperty("revolut.api.url.transaction");
         this.refreshTokenApiUrl = environment.getRequiredProperty("revolut.api.url.refreshtoken");
+        this.encryptionKey = environment.getRequiredProperty("decryption.key");
         nextDataIndex = 0;
 
         from = getDateMinusDays(Integer.parseInt(environment.getRequiredProperty("days.before.from")));
@@ -133,7 +134,7 @@ public class RevolutTransactionDataReader implements ItemReader<TransactionData>
 
         String response = sendRequest(command);
         // if result contains "{"message":"The request should be authorized."}" throw exception
-        if(response.contains("message")) {
+        if (response.contains("message")) {
             throw new RuntimeException(response);
         }
         try {
@@ -154,6 +155,15 @@ public class RevolutTransactionDataReader implements ItemReader<TransactionData>
         RefreshTokenResponse result;
 
         RevolutAuthInfo authInfo = getAuthInfoFromFile();
+        log.debug(authInfo.toString());
+
+        try {
+            authInfo.setRefreshToken(TextCryptor.decrypt(authInfo.getRefreshToken(), encryptionKey));
+            authInfo.setJwt(TextCryptor.decrypt(authInfo.getJwt(), encryptionKey));
+        } catch (Exception e) {
+            throw new RuntimeException(e.getMessage(), e);
+        }
+
         log.debug(authInfo.toString());
 
         String[] command = new String[]{
@@ -273,9 +283,9 @@ public class RevolutTransactionDataReader implements ItemReader<TransactionData>
      */
     private void removeTransactionDataFromDB() {
         LocalDate tomorrow = to.plus(Period.ofDays(1));
-        log.debug("Deleting transaction data from " + from.toString() + " to " + to.toString());
+        log.info("Deleting transaction data from " + from.toString() + " to " + to.toString());
         int deletedRows = jdbcTemplate.update(environment.getRequiredProperty("sql.delete.transactiondata"),
                 new Object[]{from.toString(), tomorrow.toString()});
-        log.debug("Deleted " + deletedRows + " rows.");
+        log.info("Deleted " + deletedRows + " rows.");
     }
 }

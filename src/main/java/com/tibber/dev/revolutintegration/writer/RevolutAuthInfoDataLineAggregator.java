@@ -8,8 +8,8 @@ import org.springframework.batch.item.file.transform.LineAggregator;
 /**
  * A line aggregator class to aggregate {@link com.tibber.dev.revolutintegration.model.RevolutAuthInfo} to Json string.
  *
- * @auther Isami Mitani
  * @version 1.0
+ * @auther Isami Mitani
  */
 public class RevolutAuthInfoDataLineAggregator implements LineAggregator<RevolutAuthInfo> {
 

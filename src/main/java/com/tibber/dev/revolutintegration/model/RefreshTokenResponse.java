@@ -6,8 +6,8 @@ import com.fasterxml.jackson.annotation.JsonSetter;
 /**
  * A model class to hold response data from refresh token API.
  *
- * @auther Isami Mitani
  * @version 1.0
+ * @auther Isami Mitani
  */
 @JsonIgnoreProperties(ignoreUnknown = true)
 public class RefreshTokenResponse {

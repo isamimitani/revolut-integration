@@ -8,8 +8,8 @@ import org.springframework.batch.core.scope.context.ChunkContext;
 /**
  * A listener class to define tasks to execute before / after batch job.
  *
- * @auther Isami Mitani
  * @version 1.0
+ * @auther Isami Mitani
  */
 public class ItemCountListener implements ChunkListener {
 

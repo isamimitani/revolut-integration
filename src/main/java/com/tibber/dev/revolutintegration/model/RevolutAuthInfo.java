@@ -3,8 +3,8 @@ package com.tibber.dev.revolutintegration.model;
 /**
  * A model class to hold auth information from database.
  *
- * @auther Isami Mitani
  * @version 1.0
+ * @auther Isami Mitani
  */
 public class RevolutAuthInfo {
 

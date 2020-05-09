@@ -9,8 +9,8 @@ import java.util.Map;
  * A model class to hold legs data.
  * This class is possessed by {@link com.tibber.dev.revolutintegration.model.TransactionData>}
  *
- * @auther Isami Mitani
  * @version 1.0
+ * @auther Isami Mitani
  */
 public class Legs {
 

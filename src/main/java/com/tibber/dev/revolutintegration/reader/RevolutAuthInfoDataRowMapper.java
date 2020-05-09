@@ -9,8 +9,8 @@ import java.sql.SQLException;
 /**
  * A mapper class to map auth information from database to Java object.
  *
- * @auther Isami Mitani
  * @version 1.0
+ * @auther Isami Mitani
  */
 public class RevolutAuthInfoDataRowMapper implements RowMapper<RevolutAuthInfo> {
 
