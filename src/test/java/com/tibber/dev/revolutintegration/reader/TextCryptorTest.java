@@ -17,10 +17,6 @@ class TextCryptorTest {
         String decipher = TextCryptor.decrypt(cipher, key);
         String cipher2 = TextCryptor.encrypt(data, key2);
         String decipher2 = TextCryptor.decrypt(cipher2, key2);
-        System.out.println(cipher);
-        System.out.println(cipher2);
-        System.out.println(decipher);
-        System.out.println(TextCryptor.encrypt(data, "1234567891123456"));
 
         assertEquals(data, decipher);
         assertEquals(data, decipher2);
@@ -32,7 +28,6 @@ class TextCryptorTest {
     @Test
     void testGenerateKey() throws Exception {
         byte[] generatedKey = TextCryptor.generateKey();
-        System.out.println(new String(generatedKey));
         String text = Base64.getEncoder().encodeToString(generatedKey);
         System.out.println(text);
     }

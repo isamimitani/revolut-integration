@@ -25,7 +25,6 @@ class RevolutAuthInfoDataLineAggregatorTest {
 
         String expected = "{refreshToken:testRefreshToken,clientId:testClientId,jwt:testJWT}";
         String result = aggregator.aggregate(authInfo);
-        System.out.println(result);
         JSONAssert.assertEquals(expected, result, JSONCompareMode.STRICT);
     }
 }
