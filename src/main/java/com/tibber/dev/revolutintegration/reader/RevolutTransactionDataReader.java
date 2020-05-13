@@ -130,7 +130,6 @@ public class RevolutTransactionDataReader implements ItemReader<TransactionData>
                 "-H",
                 "Authorization: Bearer " + tokenResponse.getAccessToken()
         };
-        System.out.println(command[1]);
 
         String response = sendRequest(command);
         // if result contains "{"message":"The request should be authorized."}" throw exception
@@ -210,7 +209,6 @@ public class RevolutTransactionDataReader implements ItemReader<TransactionData>
                     textBuilder.append((char) c);
                 }
             }
-            System.out.println(textBuilder);
         } catch (IOException e) {
             throw new RuntimeException(e.getMessage(), e);
         }
